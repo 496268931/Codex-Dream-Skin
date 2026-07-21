@@ -31,12 +31,14 @@ function createFixture({
   computedColorScheme = "",
   osAppearance = "light",
   analysisFixture = null,
+  balanceState = null,
 }) {
   const nodes = new Map();
   const rootClasses = new Set(staleSkin ? ["codex-dream-skin"] : []);
   const rootStyles = new Map(staleSkin ? [["--dream-art", "url(\"blob:stale\")"]] : []);
   const revokedUrls = [];
   const observers = [];
+  const eventListeners = new Map();
   let objectUrlCount = 0;
   let hasMain = mainPresent;
   let hasSidebar = sidebarPresent;
@@ -124,7 +126,7 @@ function createFixture({
         },
       };
     }
-    return {
+    const node = {
       id: "",
       dataset: {},
       style: {},
@@ -132,9 +134,30 @@ function createFixture({
       parentElement: null,
       textContent: "",
       innerHTML: "",
+      className: "",
+      children: [],
       setAttribute() {},
       remove() { nodes.delete(this.id); },
     };
+    node.appendChild = (child) => {
+      child.parentElement = node;
+      node.children.push(child);
+      if (child.id) nodes.set(child.id, child);
+      return child;
+    };
+    node.append = (...children) => children.forEach((child) => node.appendChild(child));
+    node.querySelector = (selector) => {
+      const className = /^\.([A-Za-z0-9_-]+)$/.exec(selector)?.[1];
+      if (!className) return null;
+      const pending = [...node.children];
+      while (pending.length) {
+        const child = pending.shift();
+        if (child.className?.split(/\s+/).includes(className)) return child;
+        pending.push(...(child.children ?? []));
+      }
+      return null;
+    };
+    return node;
   };
   if (staleSkin) {
     const style = createElement();
@@ -173,10 +196,17 @@ function createFixture({
       return [];
     },
   };
-  const context = {
-    window: {
+  const window = {
       matchMedia() { return { matches: osAppearance === "dark" }; },
-    },
+      addEventListener(type, listener) { eventListeners.set(type, listener); },
+      removeEventListener(type, listener) {
+        if (eventListeners.get(type) === listener) eventListeners.delete(type);
+      },
+      dispatchEvent(event) { eventListeners.get(event.type)?.(event); },
+    };
+  if (balanceState) window.__CODEX_DREAM_SKIN_BALANCE__ = balanceState;
+  const context = {
+    window,
     document,
     MutationObserver: class {
       constructor(callback) {
@@ -256,6 +286,26 @@ assert.equal(main.rootClasses.has("dream-theme-dark"), false);
 assert.equal(main.nodes.has("codex-dream-skin-style"), false);
 assert.equal(main.nodes.has("codex-dream-skin-chrome"), false);
 assert.deepEqual(main.revokedUrls, ["blob:fixture-1"]);
+
+const balance = createFixture({
+  shellPresent: true,
+  balanceState: { status: "loading", provider: "Fixture Relay" },
+});
+vm.runInNewContext(payload, balance.context);
+const balanceChrome = balance.nodes.get("codex-dream-skin-chrome");
+const balanceNode = balanceChrome.querySelector(".dream-provider-balance");
+assert.equal(balanceNode.hidden, false);
+assert.equal(balanceNode.dataset.status, "loading");
+assert.equal(balanceNode.querySelector(".dream-provider-balance-provider").textContent, "Fixture Relay");
+assert.equal(balanceNode.querySelector(".dream-provider-balance-value").textContent, "查询中...");
+balance.context.window.dispatchEvent({
+  type: "codex-dream-skin-balance",
+  detail: { status: "ok", provider: "New Relay", remaining: 73.81, unit: "USD" },
+});
+assert.equal(balanceNode.dataset.status, "ok");
+assert.equal(balanceNode.querySelector(".dream-provider-balance-provider").textContent, "New Relay");
+assert.match(balanceNode.querySelector(".dream-provider-balance-value").textContent, /73\.81/);
+assert.equal(balance.context.window.__CODEX_DREAM_SKIN_STATE__.cleanup(), true);
 
 const reinjected = createFixture({ shellPresent: true });
 vm.runInNewContext(payload, reinjected.context);

@@ -76,7 +76,15 @@ Open `Codex Dream Skin - Tray` to:
 - Pause or resume the skin.
 - Reapply the theme or fully restore Codex.
 
+The installer seeds three saved themes: Arina Hashimoto, Gothic Void Crusade, and Shiny Mega Rayquaza. Arina Hashimoto remains the active theme on a first install.
+
 Import a UI-free wallpaper rather than a preview containing a window, sidebar, composer, text, or buttons. Images may be at most 16 MB, 16384 pixels on either side, and 50 million total pixels.
+
+## Relay API balance
+
+When Codex is launched through Dream Skin, the main header shows the active relay provider balance. The daemon queries immediately on startup and then every 30 seconds. When CC Switch rewrites `config.toml` to select another provider, Dream Skin detects the new Base URL and credential in about three seconds and starts a fresh query. Official OpenAI authentication and providers without a compatible balance endpoint never show a fabricated amount.
+
+The balance reader accesses `%USERPROFILE%\.codex\config.toml` read-only and requests `/v1/usage` on the same HTTPS origin as the active Base URL. The API token remains inside the local Node daemon and is never written to themes, caches, logs, or the renderer. CC Switch settings are used only as an optional display-name hint; Dream Skin does not execute stored custom JavaScript usage scripts.
 
 ## Restore and remove shortcuts
 
@@ -155,6 +163,7 @@ Open the repository's [new issue page](https://github.com/Fei-Away/Codex-Dream-S
 - CDP binds only to `127.0.0.1`. Avoid untrusted local software while the skin is active.
 - The tool does not modify the official Codex installation, WindowsApps, `app.asar`, or signatures.
 - It does not write API keys, Base URLs, or model provider settings.
+- Balance checks send the token only to the active provider's same-origin HTTPS `/v1/usage`; the renderer receives only the provider name, amount, unit, and timestamp.
 - Restore controls only Codex processes that pass package identity, executable path, and recorded session checks.
 
 Maintainer and agent constraints live in [`SKILL.md`](./SKILL.md). See [`references/runtime-notes.md`](./references/runtime-notes.md) for deeper runtime troubleshooting.

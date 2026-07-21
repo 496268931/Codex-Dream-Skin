@@ -129,8 +129,65 @@ html.codex-dream-skin.dream-theme-dark [class~="group/application-menu-top-bar"]
 }
 
 #codex-dream-skin-chrome {
-  display: none !important;
+  position: fixed;
+  z-index: 31;
+  overflow: visible;
   pointer-events: none !important;
+}
+
+.dream-provider-balance {
+  position: absolute;
+  top: 10px;
+  right: 72px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: min(360px, calc(100% - 150px));
+  min-height: 25px;
+  padding: 4px 9px;
+  overflow: hidden;
+  border: 1px solid var(--dream-line-soft);
+  border-radius: 5px;
+  background: color-mix(in oklab, var(--dream-surface) 86%, transparent);
+  box-shadow: 0 3px 12px color-mix(in oklab, var(--dream-canvas) 18%, transparent);
+  color: var(--dream-text-muted);
+  font: 600 11px/1.2 "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+  white-space: nowrap;
+  backdrop-filter: blur(10px) saturate(112%);
+}
+
+.dream-provider-balance[hidden] { display: none; }
+
+.dream-provider-balance i {
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dream-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--dream-accent) 18%, transparent);
+}
+
+.dream-provider-balance-provider {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--dream-text);
+}
+
+.dream-provider-balance-value { color: var(--dream-accent); }
+.dream-provider-balance[data-status="loading"] .dream-provider-balance-value,
+.dream-provider-balance[data-status="unsupported"] .dream-provider-balance-value { color: var(--dream-text-muted); }
+.dream-provider-balance[data-status="stale"] i,
+.dream-provider-balance[data-status="error"] i { background: #d79748; }
+.dream-provider-balance[data-status="error"] .dream-provider-balance-value { color: #c26c6c; }
+
+@media (max-width: 840px) {
+  .dream-provider-balance { right: 58px; max-width: calc(100% - 118px); }
+  .dream-provider-balance-provider { display: none; }
+}
+
+@media (max-width: 620px) {
+  .dream-provider-balance { display: none; }
 }
 
 html.codex-dream-skin [role="main"] {

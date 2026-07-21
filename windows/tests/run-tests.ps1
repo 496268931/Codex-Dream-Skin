@@ -655,14 +655,19 @@ try {
   }
   $preseededThemes = @(Get-DreamSkinSavedThemes -StateRoot $themeStateRoot)
   $preseededIds = @($preseededThemes | ForEach-Object { $_.Id })
-  if ($preseededThemes.Count -lt 2 -or
+  if ($preseededThemes.Count -lt 3 -or
     $preseededIds -notcontains 'preset-arina-hashimoto' -or
-    $preseededIds -notcontains 'preset-gothic-void-crusade') {
-    throw 'Windows did not preseed both Arina Hashimoto and Gothic Void Crusade.'
+    $preseededIds -notcontains 'preset-gothic-void-crusade' -or
+    $preseededIds -notcontains 'preset-shiny-mega-rayquaza') {
+    throw 'Windows did not preseed all bundled themes.'
   }
   $gothicSeed = $preseededThemes | Where-Object { $_.Id -ceq 'preset-gothic-void-crusade' } | Select-Object -First 1
   if ($null -eq $gothicSeed -or $gothicSeed.Name -cne 'Gothic Void Crusade') {
     throw 'Gothic Void Crusade was not preseeded with the expected display name.'
+  }
+  $rayquazaSeed = $preseededThemes | Where-Object { $_.Id -ceq 'preset-shiny-mega-rayquaza' } | Select-Object -First 1
+  if ($null -eq $rayquazaSeed -or $rayquazaSeed.Name -cne '异色超级裂空座') {
+    throw 'Shiny Mega Rayquaza was not preseeded with the expected display name.'
   }
   $updatedTheme = Set-DreamSkinActiveTheme -ImagePath (Join-Path $Root 'assets\dream-reference.jpg') `
     -Theme $null -Name '测试主题' -StateRoot $themeStateRoot
@@ -676,11 +681,11 @@ try {
   $null = Initialize-DreamSkinThemeStore -SkillRoot $Root -StateRoot $themeStateRoot
   $idempotentTheme = Read-DreamSkinTheme -ThemeDirectory $themePaths.Active
   $afterReinitCount = @(Get-DreamSkinSavedThemes -StateRoot $themeStateRoot).Count
-  if ($idempotentTheme.Theme.id -cne 'custom' -or $afterReinitCount -ne 2) {
+  if ($idempotentTheme.Theme.id -cne 'custom' -or $afterReinitCount -ne 3) {
     throw 'Theme-store initialization overwrote the active custom theme or duplicated its bundled presets.'
   }
   $savedTheme = Save-DreamSkinCurrentTheme -Name '已保存主题' -StateRoot $themeStateRoot
-  if ($savedTheme.Theme.name -cne '已保存主题' -or @(Get-DreamSkinSavedThemes -StateRoot $themeStateRoot).Count -ne 3) {
+  if ($savedTheme.Theme.name -cne '已保存主题' -or @(Get-DreamSkinSavedThemes -StateRoot $themeStateRoot).Count -ne 4) {
     throw 'Saved theme creation or discovery failed.'
   }
   $null = Use-DreamSkinSavedTheme -ThemeDirectory $savedTheme.Directory -StateRoot $themeStateRoot
@@ -928,6 +933,9 @@ try {
   $imageMetadataTest = Invoke-DreamSkinNative -FilePath $node.Path -ArgumentList @(
     (Join-Path $PSScriptRoot 'image-metadata.test.mjs'))
   if ($imageMetadataTest.ExitCode -ne 0) { throw 'Image metadata regression test failed.' }
+  $providerBalanceTest = Invoke-DreamSkinNative -FilePath $node.Path -ArgumentList @(
+    (Join-Path $PSScriptRoot 'provider-balance.test.mjs'))
+  if ($providerBalanceTest.ExitCode -ne 0) { throw 'Provider balance regression test failed.' }
 
   Write-Host 'PASS: config transactions, restore scoping, state safety, argument quoting, and loopback CDP validation.'
 } finally {

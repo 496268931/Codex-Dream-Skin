@@ -235,26 +235,34 @@ function Initialize-DreamSkinThemeStore {
     Assert-DreamSkinNoReparseComponents -Path $presetTheme
     Copy-Item -LiteralPath (Join-Path $assetRoot 'theme.json') -Destination $presetTheme -Force
   }
-  # Bundled Gothic Void Crusade (same pack as macOS presets/).
-  $gothicSource = Join-Path $SkillRoot 'presets\preset-gothic-void-crusade'
-  $gothicDirectory = Join-Path $paths.Saved 'preset-gothic-void-crusade'
-  $gothicTheme = Join-Path $gothicDirectory 'theme.json'
-  $gothicSourceTheme = Join-Path $gothicSource 'theme.json'
-  $gothicSourceImage = Join-Path $gothicSource 'background.jpg'
-  Assert-DreamSkinNoReparseComponents -Path $gothicDirectory
-  Assert-DreamSkinNoReparseComponents -Path $gothicTheme
-  if ((Test-Path -LiteralPath $gothicSourceTheme -PathType Leaf) -and
-    (Test-Path -LiteralPath $gothicSourceImage -PathType Leaf) -and
-    -not (Test-Path -LiteralPath $gothicTheme -PathType Leaf)) {
-    Ensure-DreamSkinManagedDirectory -Path $gothicDirectory -Root $paths.Root
-    $gothicImage = Join-Path $gothicDirectory 'background.jpg'
-    Assert-DreamSkinNoReparseComponents -Path $gothicImage
-    Assert-DreamSkinImageFile -Path $gothicSourceImage
-    Copy-Item -LiteralPath $gothicSourceImage -Destination $gothicImage -Force
-    Assert-DreamSkinNoReparseComponents -Path $gothicImage
-    Assert-DreamSkinImageFile -Path $gothicImage
-    Assert-DreamSkinNoReparseComponents -Path $gothicTheme
-    Copy-Item -LiteralPath $gothicSourceTheme -Destination $gothicTheme -Force
+  # Bundled preset packs are self-contained under presets/preset-*.
+  $presetRoot = Join-Path $SkillRoot 'presets'
+  if (Test-Path -LiteralPath $presetRoot -PathType Container) {
+    foreach ($sourceDirectory in Get-ChildItem -LiteralPath $presetRoot -Directory -Filter 'preset-*') {
+      $source = Read-DreamSkinTheme -ThemeDirectory $sourceDirectory.FullName
+      $presetId = "$($source.Theme.id)"
+      $imageName = "$($source.Theme.image)"
+      if ($presetId -cne $sourceDirectory.Name) {
+        throw "Bundled preset directory must match its theme ID: $($sourceDirectory.FullName)"
+      }
+      if ([System.IO.Path]::GetFileName($imageName) -cne $imageName) {
+        throw "Bundled preset image must be a file in its preset directory: $($sourceDirectory.FullName)"
+      }
+
+      $destination = Join-Path $paths.Saved $presetId
+      $destinationTheme = Join-Path $destination 'theme.json'
+      Assert-DreamSkinNoReparseComponents -Path $destination
+      Assert-DreamSkinNoReparseComponents -Path $destinationTheme
+      if (-not (Test-Path -LiteralPath $destinationTheme -PathType Leaf)) {
+        Ensure-DreamSkinManagedDirectory -Path $destination -Root $paths.Root
+        $destinationImage = Join-Path $destination $imageName
+        Assert-DreamSkinNoReparseComponents -Path $destinationImage
+        Copy-Item -LiteralPath $source.ImagePath -Destination $destinationImage -Force
+        Assert-DreamSkinNoReparseComponents -Path $destinationImage
+        Assert-DreamSkinImageFile -Path $destinationImage
+        Copy-Item -LiteralPath $source.ThemePath -Destination $destinationTheme -Force
+      }
+    }
   }
   $null = Read-DreamSkinTheme -ThemeDirectory $paths.Active
   return $paths

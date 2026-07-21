@@ -2,6 +2,8 @@
   const STATE_KEY = "__CODEX_DREAM_SKIN_STATE__";
   const STYLE_ID = "codex-dream-skin-style";
   const CHROME_ID = "codex-dream-skin-chrome";
+  const BALANCE_KEY = "__CODEX_DREAM_SKIN_BALANCE__";
+  const BALANCE_EVENT = "codex-dream-skin-balance";
   const ROOT_CLASSES = [
     "codex-dream-skin",
     "dream-theme-light",
@@ -89,6 +91,7 @@
   if (previous?.observer) previous.observer.disconnect();
   if (previous?.timer) clearInterval(previous.timer);
   if (previous?.scheduler?.timeout) clearTimeout(previous.scheduler.timeout);
+  if (previous?.balanceListener) window.removeEventListener?.(BALANCE_EVENT, previous.balanceListener);
   if (previous?.artUrl) URL.revokeObjectURL(previous.artUrl);
   const artUrl = (() => {
     const comma = artDataUrl.indexOf(",");
@@ -99,6 +102,23 @@
     return URL.createObjectURL(new Blob([bytes], { type: mime }));
   })();
   const config = normalizeConfig(rawConfig);
+  const normalizeBalance = (value) => {
+    const candidate = value && typeof value === "object" ? value : {};
+    const status = ["hidden", "loading", "ok", "stale", "error", "unsupported"].includes(candidate.status)
+      ? candidate.status
+      : "hidden";
+    const provider = typeof candidate.provider === "string" && !/[\u0000-\u001f]/.test(candidate.provider)
+      ? Array.from(candidate.provider.trim()).slice(0, 80).join("")
+      : "";
+    const remaining = typeof candidate.remaining === "number" && Number.isFinite(candidate.remaining)
+      ? candidate.remaining
+      : null;
+    const unit = typeof candidate.unit === "string" && /^[A-Za-z0-9._-]{1,12}$/.test(candidate.unit)
+      ? candidate.unit
+      : "USD";
+    return { status, provider, remaining, unit };
+  };
+  let balanceState = normalizeBalance(window[BALANCE_KEY]);
   let profile = {
     ...defaultProfile,
     aspect: config.initialAspect ?? defaultProfile.aspect,
@@ -321,6 +341,46 @@
     root.style.setProperty("--dream-image-luma", profile.luma.toFixed(3));
   };
 
+  const formatBalanceAmount = (amount, unit) => {
+    if (amount === null) return "";
+    const formatted = new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return unit === "USD" ? `$${formatted}` : `${formatted} ${unit}`;
+  };
+
+  const renderBalance = (chrome) => {
+    let balance = chrome.querySelector?.(".dream-provider-balance");
+    if (!balance) {
+      balance = document.createElement("div");
+      balance.className = "dream-provider-balance";
+      const dot = document.createElement("i");
+      const provider = document.createElement("span");
+      provider.className = "dream-provider-balance-provider";
+      const value = document.createElement("span");
+      value.className = "dream-provider-balance-value";
+      balance.append(dot, provider, value);
+      chrome.appendChild(balance);
+    }
+    const provider = balance.querySelector?.(".dream-provider-balance-provider");
+    const value = balance.querySelector?.(".dream-provider-balance-value");
+    const visible = balanceState.status !== "hidden";
+    balance.hidden = !visible;
+    balance.dataset.status = balanceState.status;
+    if (!visible) return;
+    if (provider) provider.textContent = balanceState.provider || "API";
+    if (!value) return;
+    if (balanceState.status === "loading") value.textContent = "查询中...";
+    else if (balanceState.status === "ok") value.textContent = `余额 ${formatBalanceAmount(balanceState.remaining, balanceState.unit)}`;
+    else if (balanceState.status === "stale") {
+      value.textContent = balanceState.remaining === null
+        ? "余额暂不可用"
+        : `余额 ${formatBalanceAmount(balanceState.remaining, balanceState.unit)} (已过期)`;
+    } else if (balanceState.status === "unsupported") value.textContent = "暂不支持余额查询";
+    else value.textContent = "余额暂不可用";
+  };
+
   const ensure = () => {
     if (window.__CODEX_DREAM_SKIN_DISABLED__) return;
     const root = document.documentElement;
@@ -375,7 +435,15 @@
       chrome.setAttribute("aria-hidden", "true");
       document.body.appendChild(chrome);
     }
+    const shellBox = shellMain.getBoundingClientRect?.();
+    if (shellBox) {
+      chrome.style.left = `${Math.round(shellBox.left)}px`;
+      chrome.style.top = `${Math.round(shellBox.top)}px`;
+      chrome.style.width = `${Math.round(shellBox.width)}px`;
+      chrome.style.height = `${Math.round(shellBox.height)}px`;
+    }
     chrome.classList.toggle("dream-home-shell", Boolean(home));
+    renderBalance(chrome);
   };
 
   const cleanup = () => {
@@ -386,6 +454,7 @@
     state?.observer?.disconnect();
     if (state?.timer) clearInterval(state.timer);
     if (state?.scheduler?.timeout) clearTimeout(state.scheduler.timeout);
+    if (state?.balanceListener) window.removeEventListener?.(BALANCE_EVENT, state.balanceListener);
     if (state?.artUrl) URL.revokeObjectURL(state.artUrl);
     delete window[STATE_KEY];
     return true;
@@ -410,8 +479,13 @@
     attributeFilter: ["class", "data-theme", "data-appearance", "data-color-mode"],
   });
   const timer = setInterval(ensure, 5000);
+  const balanceListener = (event) => {
+    balanceState = normalizeBalance(event?.detail ?? window[BALANCE_KEY]);
+    ensure();
+  };
+  window.addEventListener?.(BALANCE_EVENT, balanceListener);
   window[STATE_KEY] = {
-    ensure, cleanup, observer, timer, scheduler, artUrl, profile, config, installToken, version: "1.2.0",
+    ensure, cleanup, observer, timer, scheduler, artUrl, profile, config, balanceListener, installToken, version: "1.2.0",
   };
   ensure();
   analyzeArt().then((result) => {

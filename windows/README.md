@@ -76,7 +76,15 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-dream-s
 - 暂停或继续显示皮肤。
 - 重新应用主题，或完整恢复 Codex。
 
+安装器会预置「桥本有菜」「Gothic Void Crusade」和「异色超级裂空座」三套已保存主题；首次安装仍以「桥本有菜」作为当前主题。
+
 导入图片必须是纯背景，不要使用包含窗口、侧栏、输入框、文字或按钮的效果截图。图片上限为 16 MB；宽或高不能超过 16384 像素，总像素不能超过 5000 万。
+
+## 中转 API 余额
+
+通过 Dream Skin 启动 Codex 后，主区顶部会显示当前中转 provider 的余额。守护进程启动时立即查询，之后每 30 秒刷新；CC Switch 改写 `config.toml` 切换 provider 后，会在约 3 秒内识别新的 Base URL 和凭据并重新查询。OpenAI 官方登录或没有兼容余额接口的 provider 不会显示虚假余额。
+
+余额查询只读 `%USERPROFILE%\.codex\config.toml`，并向当前 HTTPS Base URL 同源的 `/v1/usage` 发起请求。API Token 只在本机 Node 守护进程内用于该请求，不写入主题、缓存、日志或渲染页面。CC Switch 的设置只用于补充显示名称；Dream Skin 不执行其中保存的自定义 JavaScript 查询脚本。
 
 ## 恢复与卸载快捷方式
 
@@ -155,6 +163,7 @@ Get-AppxPackage -Name OpenAI.Codex
 - CDP 只绑定 `127.0.0.1`。皮肤运行期间不要运行来路不明的本机程序。
 - 不修改官方 Codex 安装目录、WindowsApps、`app.asar` 或签名。
 - 不写入 API Key、Base URL 或模型供应商配置。
+- 余额查询仅把 Token 发回当前 provider 的同源 HTTPS `/v1/usage`；渲染器只接收 provider 名称、余额、单位和更新时间。
 - 恢复脚本只会控制经过包身份、进程路径和会话状态校验的 Codex 进程。
 
 维护者和代理使用的实现约束见 [`SKILL.md`](./SKILL.md)，运行时排错细节见 [`references/runtime-notes.md`](./references/runtime-notes.md)。

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readImageMetadata } from "./image-metadata.mjs";
+import { createProviderBalanceMonitor } from "./provider-balance.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const here = path.dirname(scriptPath);
@@ -613,6 +614,32 @@ async function applyToSession(session, payload) {
   return session.evaluate(payload);
 }
 
+export function balancePayloadFor(state) {
+  const value = {
+    status: ["hidden", "loading", "ok", "stale", "error", "unsupported"].includes(state?.status)
+      ? state.status
+      : "hidden",
+    provider: typeof state?.provider === "string" ? state.provider.slice(0, 80) : "",
+    remaining: typeof state?.remaining === "number" && Number.isFinite(state.remaining)
+      ? state.remaining
+      : null,
+    unit: typeof state?.unit === "string" && /^[A-Za-z0-9._-]{1,12}$/.test(state.unit)
+      ? state.unit
+      : "USD",
+    fetchedAt: Number.isFinite(state?.fetchedAt) ? state.fetchedAt : null,
+  };
+  return `(() => {
+    const value = ${JSON.stringify(value)};
+    window.__CODEX_DREAM_SKIN_BALANCE__ = value;
+    window.dispatchEvent(new CustomEvent("codex-dream-skin-balance", { detail: value }));
+  })()`;
+}
+
+async function applyBalanceToSession(session, state) {
+  if (session.closed) return;
+  await session.evaluate(balancePayloadFor(state));
+}
+
 export function earlyPayloadFor(payload, revision) {
   return `(() => {
     const generationKey = "__CODEX_DREAM_SKIN_EARLY_GENERATION__";
@@ -1098,6 +1125,20 @@ async function runWatch(options) {
   let lastStrongThemeAuditAt = 0;
   let loadedPayload = null;
   let paused = false;
+  let lastBalanceApplyErrorLogAt = 0;
+  const balanceMonitor = createProviderBalanceMonitor({
+    onUpdate(state) {
+      if (paused) return;
+      for (const [id, session] of sessions) {
+        applyBalanceToSession(session, state).catch((error) => {
+          if (Date.now() - lastBalanceApplyErrorLogAt >= 30000) {
+            console.error(`[dream-skin] balance status update failed for ${id}: ${error.message}`);
+            lastBalanceApplyErrorLogAt = Date.now();
+          }
+        });
+      }
+    },
+  });
   const stop = () => { stopping = true; };
   const rejectTarget = (target, baseDelayMs, error = null) => {
     const previous = targetFailures.get(target.id) ?? { failures: 0, lastLogAt: 0 };
@@ -1117,7 +1158,10 @@ async function runWatch(options) {
     session.on("Page.loadEventFired", () => {
       if (!fallbackTargets.get(id)) return;
       setTimeout(() => {
-        const operation = paused ? removeFromSession(session) : applyToSession(session, loadedPayload.payload);
+        const operation = paused ? removeFromSession(session) : (async () => {
+          await applyToSession(session, loadedPayload.payload);
+          await applyBalanceToSession(session, balanceMonitor.state);
+        })();
         operation.catch((error) => {
           if (Date.now() - lastReinjectErrorLogAt >= 30000) {
             console.error(`[dream-skin] reinject failed for ${target.id}: ${error.message}`);
@@ -1134,12 +1178,14 @@ async function runWatch(options) {
     loadedPayload = await loadPayload(options.themeDir);
     lastStrongThemeAuditAt = Date.now();
     paused = await fileExists(options.pauseFile);
+    await balanceMonitor.tick();
     while (!stopping) {
       if (identityAnchor.closed) {
         console.error("[dream-skin] original CDP browser identity closed; watcher is stopping instead of reconnecting");
         process.exitCode = 3;
         break;
       }
+      await balanceMonitor.tick();
       let targets = [];
       try {
         targets = await listAppTargets(options.port);
@@ -1218,6 +1264,7 @@ async function runWatch(options) {
               else earlyScripts.delete(id);
               await removeEarlyPayload(session, previousEarlyScript);
               await applyToSession(session, loadedPayload.payload);
+              await applyBalanceToSession(session, balanceMonitor.state);
             }
           } catch (error) {
             console.error(`[dream-skin] live theme update failed for ${id}: ${error.message}`);
@@ -1291,7 +1338,10 @@ async function runWatch(options) {
             ).catch(() => false);
           }
           if (paused) await removeFromSession(session);
-          else if (!earlyApplied) await applyToSession(session, loadedPayload.payload);
+          else {
+            if (!earlyApplied) await applyToSession(session, loadedPayload.payload);
+            await applyBalanceToSession(session, balanceMonitor.state);
+          }
           sessions.set(target.id, session);
           if (earlyScriptId) earlyScripts.set(target.id, earlyScriptId);
           targetFailures.delete(target.id);
@@ -1308,6 +1358,7 @@ async function runWatch(options) {
       await new Promise((resolve) => setTimeout(resolve, 1200));
     }
   } finally {
+    balanceMonitor.stop();
     identityAnchor.close();
     for (const [id, session] of sessions) {
       await removeEarlyPayload(session, earlyScripts.get(id));

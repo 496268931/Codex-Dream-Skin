@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "preset-shiny-mega-rayquaza",
+  "name": "异色超级裂空座",
+  "brandSubtitle": "CODEX DREAM SKIN",
+  "tagline": "以画龙点睛撕开星海，向更高处进发。",
+  "projectPrefix": "选择项目 · ",
+  "projectLabel": "◉  选择项目",
+  "statusText": "DRAGON ASCENT ONLINE",
+  "quote": "ASCEND BEYOND THE SKY",
+  "image": "background.jpg",
+  "appearance": "dark",
+  "art": {
+    "focusX": 0.76,
+    "focusY": 0.42,
+    "safeArea": "left",
+    "taskMode": "ambient"
+  },
+  "palette": {
+    "accent": "#d8bd45"
+  }
+}
