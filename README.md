@@ -75,12 +75,18 @@ Passion8 为本项目用户准备了专属福利：通过<a href="https://passio
 - [**主题库 Gallery**](https://dreamskin.cc/gallery)：浏览社区已审核的主题，支持最新 / 热门排序和创作者榜单。
   每套主题都能先在网页里的桌面模拟器中试穿，再决定装不装。
 
-<p align="center">
-  <img src="docs/images/悟空.png" alt="社区主题「悟空（WUKONG）」在桌面模拟器里的实机效果" width="440">
-  <img src="docs/images/DeepSeek-鲸鱼娘.png" alt="社区主题「DeepSeek-鲸鱼娘」在桌面模拟器里的实机效果" width="440">
-  <br>
-  <sub>社区主题试穿效果 ·「悟空（WUKONG）」by JamesOpsLab ·「DeepSeek-鲸鱼娘」by powerdog996</sub>
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="docs/images/悟空.png" alt="社区主题「悟空（WUKONG）」在桌面模拟器里的实机效果" width="420"><br>
+      <sub>「悟空（WUKONG）」by JamesOpsLab</sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/DeepSeek-鲸鱼娘.png" alt="社区主题「DeepSeek-鲸鱼娘」在桌面模拟器里的实机效果" width="420"><br>
+      <sub>「DeepSeek-鲸鱼娘」by powerdog996</sub>
+    </td>
+  </tr>
+</table>
 
 - [**在线 Studio**](https://dreamskin.cc/studio)：在浏览器里换背景图、调主题色、写 Safe CSS，导出 `.zip` 主题包，
   也可以直接投稿到主题库（需登录，经人工审核后公开）。

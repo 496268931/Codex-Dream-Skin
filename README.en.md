@@ -78,12 +78,18 @@ updates, and uninstall steps.
   with recent/popular sorting and creator rankings. Every theme can be tried on
   in an in-page desktop simulator before you install it.
 
-<p align="center">
-  <img src="docs/images/悟空.png" alt="Community theme 悟空（WUKONG） rendered live on desktop" width="440">
-  <img src="docs/images/DeepSeek-鲸鱼娘.png" alt="Community theme DeepSeek-鲸鱼娘 rendered live on desktop" width="440">
-  <br>
-  <sub>Trying on community themes · 悟空（WUKONG） by JamesOpsLab · DeepSeek-鲸鱼娘 by powerdog996</sub>
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="docs/images/悟空.png" alt="Community theme 悟空（WUKONG） rendered live on desktop" width="420"><br>
+      <sub>悟空（WUKONG） by JamesOpsLab</sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/DeepSeek-鲸鱼娘.png" alt="Community theme DeepSeek-鲸鱼娘 rendered live on desktop" width="420"><br>
+      <sub>DeepSeek-鲸鱼娘 by powerdog996</sub>
+    </td>
+  </tr>
+</table>
 
 - [**Online Studio**](https://dreamskin.cc/studio) — swap the background, tune
   theme colors, and write Safe CSS in the browser, then export a `.zip` pack or
