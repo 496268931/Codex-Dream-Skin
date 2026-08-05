@@ -76,20 +76,19 @@ Passion8 为本项目用户准备了专属福利：通过<a href="https://passio
   每套主题都能先在网页里的桌面模拟器中试穿，再决定装不装。
 
 <p align="center">
-  <a href="https://dreamskin.cc/gallery">
-    <img src="docs/images/site-tryon-zh.webp" alt="在 DreamSkin.cc 的桌面模拟器里试穿社区主题「晨雾山水」" width="900">
-  </a><br>
-  <sub>社区主题「晨雾山水」的在线试穿 · 首页/任务页、宽窄窗口、侧栏展开收起都能当场切，满意了再一键换肤或下载主题包</sub>
+  <img src="docs/images/悟空.png" alt="社区主题「悟空（WUKONG）」在桌面模拟器里的实机效果" width="440">
+  <img src="docs/images/DeepSeek-鲸鱼娘.png" alt="社区主题「DeepSeek-鲸鱼娘」在桌面模拟器里的实机效果" width="440">
+  <br>
+  <sub>社区主题试穿效果 ·「悟空（WUKONG）」by JamesOpsLab ·「DeepSeek-鲸鱼娘」by powerdog996</sub>
 </p>
 
 - [**在线 Studio**](https://dreamskin.cc/studio)：在浏览器里换背景图、调主题色、写 Safe CSS，导出 `.zip` 主题包，
   也可以直接投稿到主题库（需登录，经人工审核后公开）。
 
 <p align="center">
-  <a href="https://dreamskin.cc/studio">
-    <img src="docs/images/site-studio-zh.webp" alt="在 DreamSkin.cc 在线 Studio 里编辑社区主题「月下松岚」" width="900">
-  </a><br>
-  <sub>在线 Studio · 左侧实时预览，右侧调背景图、外观焦点与配色；主题库里任意一套主题都能一键载入继续改</sub>
+  <img src="docs/images/studio-custom-look.png" alt="在 DreamSkin.cc 在线 Studio 里调好的一套自定义背景效果" width="900">
+  <br>
+  <sub>在线 Studio · 换一张喜欢的背景图，调好焦点与配色，就是你自己的主题</sub>
 </p>
 
 macOS 菜单栏和 Windows 托盘都有「主题库 Gallery」和「在线 Studio」入口，可以直接打开。

@@ -79,10 +79,10 @@ updates, and uninstall steps.
   in an in-page desktop simulator before you install it.
 
 <p align="center">
-  <a href="https://dreamskin.cc/gallery">
-    <img src="docs/images/site-tryon-en.webp" alt="Trying on the community theme 晨雾山水 in the DreamSkin.cc desktop simulator" width="900">
-  </a><br>
-  <sub>Trying on the community theme 晨雾山水 · switch home/task page, wide/compact window, and sidebar on the spot, then apply in one click or download the pack</sub>
+  <img src="docs/images/悟空.png" alt="Community theme 悟空（WUKONG） rendered live on desktop" width="440">
+  <img src="docs/images/DeepSeek-鲸鱼娘.png" alt="Community theme DeepSeek-鲸鱼娘 rendered live on desktop" width="440">
+  <br>
+  <sub>Trying on community themes · 悟空（WUKONG） by JamesOpsLab · DeepSeek-鲸鱼娘 by powerdog996</sub>
 </p>
 
 - [**Online Studio**](https://dreamskin.cc/studio) — swap the background, tune
@@ -90,10 +90,9 @@ updates, and uninstall steps.
   submit it to the library (sign-in required; published after human review).
 
 <p align="center">
-  <a href="https://dreamskin.cc/studio">
-    <img src="docs/images/site-studio-en.webp" alt="Editing the community theme 月下松岚 in the DreamSkin.cc online Studio" width="900">
-  </a><br>
-  <sub>Online Studio · live preview on the left, background artwork, appearance/focal point, and palette on the right; any library theme loads straight in to keep editing</sub>
+  <img src="docs/images/studio-custom-look.png" alt="A custom background tuned in the DreamSkin.cc online Studio" width="900">
+  <br>
+  <sub>Online Studio · swap in a background you like, dial in the focal point and palette — now it's your theme</sub>
 </p>
 
 The macOS menu bar and Windows tray both link straight to **Gallery** and
