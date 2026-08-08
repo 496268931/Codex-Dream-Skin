@@ -76,12 +76,13 @@ try {
       $tray.TargetPath = $powershell
       $tray.Arguments = "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy RemoteSigned -File `"$trayScript`"$portArgument"
       $tray.WorkingDirectory = $engine.Root
+      $tray.WindowStyle = 7
       $tray.Description = 'Open Codex Dream Skin status and theme controls in the system tray'
       $tray.Save()
     }
     Start-Process -FilePath $powershell -ArgumentList `
       "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy RemoteSigned -File `"$trayScript`"$portArgument" `
-      -WindowStyle Hidden | Out-Null
+      -WorkingDirectory $engine.Root -WindowStyle Hidden | Out-Null
   }
 
   if ($NoShortcuts) {
