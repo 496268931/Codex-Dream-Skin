@@ -91,6 +91,7 @@ UPDATE_JSON="$({
   if (value.releaseUrl !== "https://github.com/Fei-Away/Codex-Dream-Skin/releases/latest") process.exit(1);
 ' "$UPDATE_JSON"
 if /usr/bin/grep -R -n -E --exclude-dir='.build' \
+  --exclude-dir='.build-*' \
   'xattr|spctl[[:space:]]+--master-disable' \
   "$ROOT/menubar-app" "$ROOT/scripts/build-menubar-app.sh" "$ROOT/scripts/build-dmg.sh" >/dev/null; then
   printf 'Native distribution must not bypass Gatekeeper or remove quarantine attributes.\n' >&2
@@ -751,6 +752,41 @@ if /usr/bin/grep -F -q 'launchctl remove "$INJECTOR_JOB_LABEL" >/dev/null 2>&1 |
 fi
 if /usr/bin/grep -F -q 'index($0, "--port " port)' "$ROOT/scripts/common-macos.sh"; then
   printf 'injector discovery still accepts a near-prefix port.\n' >&2
+  exit 1
+fi
+APPLY_SCRIPT="$ROOT/scripts/apply-from-menubar-macos.sh"
+/usr/bin/grep -F -q 'if hot_reapply_theme "$PORT" 8000; then' "$APPLY_SCRIPT"
+/usr/bin/grep -F -q 'SESSION="off"' "$APPLY_SCRIPT"
+/usr/bin/grep -F -q 'if ! confirm "$PROMPT" "$OK_LABEL"; then' "$APPLY_SCRIPT"
+/usr/bin/grep -F -q '"$SCRIPT_DIR/start-dream-skin-macos.sh" --restart-existing' "$APPLY_SCRIPT"
+if /usr/bin/grep -F -q 'CODEX_RUNNING=' "$APPLY_SCRIPT" ||
+   /usr/bin/grep -F -q 'MENU_ACTION=' "$APPLY_SCRIPT" ||
+   /usr/bin/grep -F -q 'OPEN_PROMPT=' "$APPLY_SCRIPT"; then
+  printf 'menu apply must preserve the original session-driven prompt model.\n' >&2
+  exit 1
+fi
+HOT_LINE="$(/usr/bin/grep -n 'hot_reapply_theme "$PORT" 8000' "$APPLY_SCRIPT" | /usr/bin/head -1 | /usr/bin/cut -d: -f1)"
+CONFIRM_LINE="$(/usr/bin/grep -n 'if ! confirm "$PROMPT" "$OK_LABEL"; then' "$APPLY_SCRIPT" | /usr/bin/head -1 | /usr/bin/cut -d: -f1)"
+START_LINE="$(/usr/bin/grep -n 'start-dream-skin-macos.sh" --restart-existing' "$APPLY_SCRIPT" | /usr/bin/head -1 | /usr/bin/cut -d: -f1)"
+if [ -z "$HOT_LINE" ] || [ -z "$CONFIRM_LINE" ] || [ -z "$START_LINE" ] ||
+   [ "$CONFIRM_LINE" -ge "$HOT_LINE" ] ||
+   [ "$HOT_LINE" -ge "$START_LINE" ]; then
+  printf 'menu apply must keep its confirmation and hot-reapply before falling back to start.\n' >&2
+  exit 1
+fi
+MENU_SOURCE="$ROOT/menubar-app/Sources/CodexDreamSkinMenuBar/AppDelegate.swift"
+OPEN_CODEX_BODY="$(/usr/bin/sed -n '/@objc private func openCodex()/,/@objc private func openDreamSkinWebsite()/p' "$MENU_SOURCE")"
+/usr/bin/grep -F -q 'addActionItem("打开 ChatGPT", action: #selector(openCodex), enabled: !busy)' "$MENU_SOURCE"
+/usr/bin/grep -F -q 'showError(title: "未找到 ChatGPT", message: "请先安装并至少启动一次官方 ChatGPT / Codex 桌面应用。")' "$MENU_SOURCE"
+/usr/bin/grep -F -q 'guard !engineNeedsInstall(),' "$MENU_SOURCE"
+/usr/bin/grep -F -q 'let script = installedScript(named: "start-dream-skin-macos.sh") else {' "$MENU_SOURCE"
+/usr/bin/grep -F -q 'NSWorkspace.shared.openApplication(at: appURL, configuration: configuration)' "$MENU_SOURCE"
+/usr/bin/grep -F -q 'ScriptRunner.run(script: script)' "$MENU_SOURCE"
+/usr/bin/grep -F -q 'title: "无法打开 ChatGPT",' "$MENU_SOURCE"
+if /usr/bin/grep -F -q 'applyTitle = "打开并应用皮肤"' "$MENU_SOURCE" ||
+   /usr/bin/grep -F -q 'runInstalledScript(named: "apply-from-menubar-macos.sh", operation: "打开 ChatGPT")' "$MENU_SOURCE" ||
+   /usr/bin/printf '%s\n' "$OPEN_CODEX_BODY" | /usr/bin/grep -F -q 'installBundledEngineIfNeeded(force:'; then
+  printf 'Open ChatGPT must keep its menu title and must not use menu apply or install the engine implicitly.\n' >&2
   exit 1
 fi
 

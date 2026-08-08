@@ -946,12 +946,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
       showError(title: "未找到 ChatGPT", message: "请先安装并至少启动一次官方 ChatGPT / Codex 桌面应用。")
       return
     }
-    let configuration = NSWorkspace.OpenConfiguration()
-    NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
-      if let error {
-        DispatchQueue.main.async {
-          self.showError(title: "无法打开 ChatGPT", message: error.localizedDescription)
+    guard !operationInFlight else { return }
+    guard !engineNeedsInstall(),
+          let script = installedScript(named: "start-dream-skin-macos.sh") else {
+      let configuration = NSWorkspace.OpenConfiguration()
+      NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
+        if let error {
+          DispatchQueue.main.async {
+            self.showError(title: "无法打开 ChatGPT", message: error.localizedDescription)
+          }
         }
+      }
+      return
+    }
+    operationInFlight = true
+    rebuildMenu()
+    ScriptRunner.run(script: script) { [weak self] result in
+      guard let self else { return }
+      self.operationInFlight = false
+      self.refreshStatus()
+      self.rebuildMenu()
+      if !result.succeeded {
+        self.showError(
+          title: "无法打开 ChatGPT",
+          message: self.conciseOutput(result.output, fallback: "请检查 ChatGPT 是否已安装，并重试。")
+        )
       }
     }
   }
