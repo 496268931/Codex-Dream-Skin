@@ -8,18 +8,27 @@ Codex Dream Skin 通过本机回环 CDP 给官方 Codex Windows 桌面应用加�
 
 ## 运行要求
 
+- Windows 10 或更高版本（x64；安装器声明 Windows 10 为最低版本）。
 - 从 Microsoft Store 安装且已注册到当前用户的官方 `OpenAI.Codex` 应用。
-- Node.js 22 或更高版本，`node.exe` 可从 `PATH` 找到。
-- Windows PowerShell 5.1 或更高版本。
+- Release Setup.exe 已内置 Node.js；只有从源码运行时才需要 `PATH` 中有 Node.js 22 或更高版本。
+- Windows PowerShell 5.1 或更高版本（安装器会在后台调用，普通用户不需要打开它）。
+
+## Release 安装（推荐普通用户）
+
+普通用户请从 [GitHub Releases](https://github.com/Fei-Away/Codex-Dream-Skin/releases) 下载
+`CodexDreamSkin-Setup-vX.Y.Z.exe`，按 [`docs/install-windows.md`](../docs/install-windows.md) 的图形
+界面步骤安装。安装器自带固定 Node 运行时，不需要 clone 仓库或运行 `.ps1`；默认按当前用户安装，
+不应要求管理员权限。未签名的新下载偶尔会触发 SmartScreen，按“更多信息 → 仍要运行”即可，
+不要关闭 Defender。后续更新运行新的 Setup.exe 覆盖安装，主题和图片会保留。
 
 安装脚本需要在 Codex 完全退出后运行。普通使用不需要管理员权限，也不需要接管 WindowsApps 目录。
 
-## 安装
+## 高级：从源码安装
 
-在 PowerShell 中进入仓库的 `windows` 目录，然后运行：
+普通用户无需阅读本节。在 PowerShell 中进入仓库的 `windows` 目录，然后运行：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-dream-skin.ps1
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\install-dream-skin.ps1
 ```
 
 安装器会校验官方 Codex Store 包和 Node.js，保存可恢复的外观配置，并初始化本地主题仓库。默认还会创建这些快捷方式：
@@ -28,12 +37,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-dream-
 - `Codex Dream Skin - Tray`：打开系统托盘主题控制。
 - `Codex Dream Skin - Restore`：恢复官方外观并关闭已保存的 CDP 会话。
 
-安装命令中的 `Bypass` 只作用于这一次由用户明确发起的安装进程。安装器会先校验运行时副本的 SHA-256，再仅对 `%LOCALAPPDATA%\CodexDreamSkin\engine` 中受管的 PowerShell 副本清除下载区标记。日常快捷方式使用 `RemoteSigned`，不会绕过系统或企业组策略。
+源码安装命令与日常快捷方式都使用 `RemoteSigned`，不会绕过系统或企业组策略。安装器会先校验运行时副本的 SHA-256，再仅对 `%LOCALAPPDATA%\CodexDreamSkin\engine` 中受管的 PowerShell 副本清除下载区标记。
 
 如需使用自定义端口，可以在安装时传入 `-Port`。端口范围必须是 `1024` 到 `65535`。
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-dream-skin.ps1 -Port 9444
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\install-dream-skin.ps1 -Port 9444
 ```
 
 ## 更新
@@ -47,13 +56,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-dream-
 命令行启动：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-dream-skin.ps1 -PromptRestart
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\start-dream-skin.ps1 -PromptRestart
 ```
 
 启动后运行验证脚本：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-dream-skin.ps1 `
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\verify-dream-skin.ps1 `
   -ScreenshotPath "$env:TEMP\codex-dream-skin.png"
 ```
 
@@ -72,33 +81,54 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-dream-s
 打开 `Codex Dream Skin - Tray` 后可以：
 
 - 更换 PNG、JPEG 或 WebP 背景图。
+- 导入普通 `.zip` 主题包到“已保存主题”（不支持 `.dreamskin`）。
 - 保存当前主题并从「已保存主题」切换。
 - 暂停或继续显示皮肤。
 - 重新应用主题，或完整恢复 Codex。
 
-安装器会预置「桥本有菜」「Gothic Void Crusade」和「异色超级裂空座」三套已保存主题；首次安装仍以「桥本有菜」作为当前主题。
+在 DreamSkin.cc 上，对包含完整三件套且通过审核的兼容主题点击“一键换肤”，浏览器会打开
+`dreamskin://apply?version=...`。Windows 会显示原生确认框；确认后客户端只从固定的
+`https://api.dreamskin.cc` 下载该版本，核对审核元数据、实际字节数和 SHA-256，再执行与手动 ZIP
+导入相同的清单、图片与 Safe CSS 校验并切换主题。Codex 已打开但没有可用皮肤会话时可能重启，确认前
+请保存输入。链接不能指定任意下载地址、文件路径或命令，也不能静默应用；不完整的旧主题仍会被客户端拒绝。
 
-导入图片必须是纯背景，不要使用包含窗口、侧栏、输入框、文字或按钮的效果截图。图片上限为 16 MB；宽或高不能超过 16384 像素，总像素不能超过 5000 万。
+导入图片必须是纯背景，不要使用包含窗口、侧栏、输入框、文字或按钮的效果截图。图片上限为 10 MB；宽或高不能超过 16384 像素，总像素不能超过 5000 万。
+
+新的正式 Studio ZIP 必须包含 `manifest.json`、非空 `theme.json`、非空 `theme.css`、恰好一张 `background.webp|jpg|png`，并可选
+带 `LICENSE.txt`、`manifest.sig`；文件直接位于根目录或只包一层主题目录。本地简化包也必须恰好包含
+`theme.json`、`theme.css` 与其引用图片，且只应来自可信来源。压缩文件上限 32 MiB、最多
+32 个条目、解压后最多 64 MiB；路径穿越、链接/reparse、嵌套压缩包和未注册文件会被拒绝。正式包还会
+核对平台、最低客户端版本及清单中每个负载文件的大小与 SHA-256。Safe CSS 会在本机导入和每次应用时
+复验，通过后只作用于 12 个注册部件；升级前已有的无 CSS legacy 主题仍可切换且不会注入额外 CSS。
+预留签名当前不验证。导入只加入主题库，不会改动当前主题；重复内容不会再次写入。同 ID 的新版本会在确认
+旧目录身份后原地更新；只有语义指纹完全一致的旧版 `-2`/`-3` 同族目录才会被清理，名称本身不能证明重复，
+身份不明时会保留并拒绝覆盖。
+
+也可从托盘选择“打开主题文件夹”，手动把已解压、且直接包含 `theme.json`、`theme.css` 与背景图的完整目录移动到
+`%LOCALAPPDATA%\CodexDreamSkin\themes\`。重新打开托盘菜单后即可看到；不要再套一层目录。手动目录
+不会经过 ZIP 导入器的归档校验，请只移动可信内容。
+
+安装源码版时还会预置「异色超级裂空座」主题，可从“已保存主题”直接切换。
 
 ## 中转 API 余额
 
-通过 Dream Skin 启动 Codex 后，主区顶部会显示当前中转 provider 的余额。守护进程启动时立即查询，之后每 30 秒刷新；CC Switch 改写 `config.toml` 切换 provider 后，会在约 3 秒内识别新的 Base URL 和凭据并重新查询。OpenAI 官方登录或没有兼容余额接口的 provider 不会显示虚假余额。
+通过 Dream Skin 启动 Codex 后，右上角会显示当前中转 provider 的余额。启动时立即查询，之后约每 30 秒刷新；provider 切换后会读取新的 `config.toml` 配置并重新查询。官方 OpenAI 登录或不兼容余额接口的 provider 不显示余额。
 
-余额查询只读 `%USERPROFILE%\.codex\config.toml`，并向当前 HTTPS Base URL 同源的 `/v1/usage` 发起请求。API Token 只在本机 Node 守护进程内用于该请求，不写入主题、缓存、日志或渲染页面。CC Switch 的设置只用于补充显示名称；Dream Skin 不执行其中保存的自定义 JavaScript 查询脚本。
+查询只读取 `%USERPROFILE%\.codex\config.toml`，向当前 HTTPS Base URL 同源的 `/v1/usage` 请求。Token 仅留在本机 Node 进程中，不写入主题、缓存、日志或页面。
 
 ## 恢复与卸载快捷方式
 
 恢复官方外观；如果 Codex 正在运行，确认后关闭并重新打开：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\restore-dream-skin.ps1 `
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\restore-dream-skin.ps1 `
   -RestoreBaseTheme -PromptRestart
 ```
 
 如需同时删除 Dream Skin 创建的快捷方式，再增加 `-Uninstall`：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\restore-dream-skin.ps1 `
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\restore-dream-skin.ps1 `
   -RestoreBaseTheme -PromptRestart -Uninstall
 ```
 
@@ -152,6 +182,10 @@ Get-AppxPackage -Name OpenAI.Codex
 
 通过 `Codex Dream Skin` 快捷方式启动 Codex，再运行验证脚本。普通 Codex 启动方式不会打开 Dream Skin 所需的调试会话。
 
+Codex Store `26.715.10079.0` 起，owl runtime 可能把应用包激活参数转换为 `codex://` 路径。当前启动器会识别这一行为，并对同一个已验证 Store 包内的精确 `ChatGPT.exe` 尝试一次原始参数回退；不会修改文件或 WindowsApps 权限。
+
+Issue #235 的实机结果已经确认两种独立失败：`26.715.10079.0` 的 WindowsApps ACL 会返回 `access-denied`；`26.721.3404.0` 可保留原始 CDP 参数，但 production runtime 仍不监听端口。两种结果都意味着当前 Codex/Windows 组合无法在项目安全边界内启用皮肤；该回退目前是安全诊断与回滚机制，不是对受影响 owl 版本的兼容性保证。不要接管 WindowsApps 所有权或修改官方包；请保留完整错误并关注 Issue #235 的上游兼容状态。
+
 ### Codex 更新后皮肤失效
 
 重新运行安装器和启动快捷方式。脚本会重新发现当前注册的 Store 包，不依赖旧版本的可执行文件路径。
@@ -160,10 +194,11 @@ Get-AppxPackage -Name OpenAI.Codex
 
 ## 安全边界
 
-- CDP 只绑定 `127.0.0.1`。皮肤运行期间不要运行来路不明的本机程序。
+- CDP 只绑定 `127.0.0.1`，但没有身份认证；同一台电脑上的其他进程仍可能连接并读取或控制 renderer。
+- 暂停主题或只停止 injector 不会关闭正在运行的 Codex 调试端口；执行带重启的完整恢复，或退出全部 Codex 后从官方普通入口重新打开，风险窗口才结束。
 - 不修改官方 Codex 安装目录、WindowsApps、`app.asar` 或签名。
 - 不写入 API Key、Base URL 或模型供应商配置。
-- 余额查询仅把 Token 发回当前 provider 的同源 HTTPS `/v1/usage`；渲染器只接收 provider 名称、余额、单位和更新时间。
 - 恢复脚本只会控制经过包身份、进程路径和会话状态校验的 Codex 进程。
+- 完整威胁模型与操作建议见 [`../SECURITY.md`](../SECURITY.md)。
 
 维护者和代理使用的实现约束见 [`SKILL.md`](./SKILL.md)，运行时排错细节见 [`references/runtime-notes.md`](./references/runtime-notes.md)。

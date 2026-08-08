@@ -111,6 +111,13 @@ fi
 
 progress "检查 ChatGPT…"
 ensure_state_root
+progress "尝试热重载皮肤…"
+
+if hot_reapply_theme "$PORT" 8000; then
+  progress "完成：皮肤已应用"
+  exit 0
+fi
+
 progress "启动/连接调试口…"
 
 "$SCRIPT_DIR/start-dream-skin-macos.sh" --restart-existing >>"$LOG_OUT" 2>&1
@@ -122,6 +129,6 @@ if [ "$code" -eq 0 ]; then
 fi
 
 detail="$(/usr/bin/tail -n 5 "$LOG_OUT" 2>/dev/null | /usr/bin/tr '\n' ' ' | /usr/bin/cut -c1-350)"
-alert "应用失败（$code）。$detail"
+alert "应用失败（${code}）。$detail"
 progress "应用失败"
 exit "$code"

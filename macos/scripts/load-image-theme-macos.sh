@@ -78,6 +78,10 @@ progress "Loading image..."
 # Fast Node for write-theme (avoid full codesign when possible)
 ensure_node_runtime
 
+# Reject decompression bombs before `sips -Z` rasterizes the full source image.
+"$NODE" "$SCRIPT_DIR/check-image-dimensions.mjs" "$IMAGE" \
+  || fail "Image dimensions are invalid or exceed the safe pixel budget (max 16384 px per side / 50 megapixels)."
+
 image_name="background.jpg"
 temporary="$THEME_DIR/.background.$$.tmp.jpg"
 prepared="$THEME_DIR/$image_name"
@@ -98,7 +102,7 @@ case "$ext" in
 esac
 [ -s "$temporary" ] || fail "Prepared image is empty."
 PREPARED_BYTES="$(/usr/bin/stat -f '%z' "$temporary")"
-[ "$PREPARED_BYTES" -le 16777216 ] || fail "Prepared image larger than 16 MB."
+[ "$PREPARED_BYTES" -le 10485760 ] || fail "Prepared image larger than 10 MB."
 /bin/chmod 600 "$temporary"
 /bin/mv -f "$temporary" "$prepared"
 
