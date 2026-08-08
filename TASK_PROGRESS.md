@@ -29,6 +29,20 @@
   suite passes on PowerShell 5.1 and 7, the portable Node tests and payload
   validation pass, and the runtime-asset sync check is clean. The merge was
   committed and pushed to `wy/main`.
+- [landed] After the merge commit (`800a2d2`), reinstalled the managed engine
+  from the merged source, replacing the July 21 engine that could not verify
+  the current Codex shell. The fresh engine is `1.5.12` with the v1.5.12
+  selectors, readiness checks, Safe CSS, `provider-balance.mjs`, and the
+  bundled Shiny Mega Rayquaza preset staged. Installed version verified as
+  `1.5.12`; skin injection and verification pass on the current Codex
+  (`OpenAI.Codex_26.803.5235.0`).
+- [ui] The relay-balance badge was fixed to the top-right, where it overlapped
+  the Codex window controls. Moved it to top-center
+  (`top: 10px; left: 50%; transform: translateX(-50%)`) in the canonical
+  `runtime/dream-skin.css` and re-synced the platform copies
+  (`macos/assets`, `windows/assets`). Committed `483da04` and pushed to
+  `wy/main`. Desktop and Start-menu shortcuts were recreated by the reinstall
+  and need no further action.
 
 ## Client release v1.5.12 (2026-08-08)
 
